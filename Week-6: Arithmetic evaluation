@@ -1,0 +1,68 @@
+
+#include<stdio.h>
+#include<stdlib.h>
+struct node{
+        int coef,power;
+        struct node*next;
+};
+struct node*temp,*ptr,*poly,*t;
+void insert(){
+        int a;
+        printf("Enter the number of terms: ");
+        scanf("%d",&a);
+        printf("\nEnter the coefficient with power:\n");
+        for(int i=0;i<a;i++){
+                ptr=malloc(sizeof(struct node*));
+                if(poly==NULL){
+                        scanf("%d %d",&ptr->coef,&ptr->power);
+                        ptr->next=NULL;
+                        poly=ptr;
+                }
+                else
+                {
+                        t=poly;
+                        scanf("%d %d",&ptr->coef,&ptr->power);
+                        ptr->next=NULL;
+                        while(t->next!=NULL)
+                            t=t->next;
+                        t->next=ptr;
+                        t=ptr;
+                }
+        }
+}
+
+void display(){
+        temp=poly;
+        while(temp!=NULL){
+                printf("%dx^%d ",temp->coef,temp->power);
+                temp=temp->next;
+                if (temp!=NULL)
+                        printf("+ ");
+        }
+        printf("\n");
+}
+
+void eval(){
+        long int e=0;
+        int x;
+        struct node*ptr1;
+        ptr1=poly;
+        printf("\nEnter the value of x: ");
+        scanf("%d",&x);
+        while(ptr1!=NULL)
+        {
+                int y;
+                y=x;
+                for(int i=1;i<ptr1->power;i++){
+                    y=y*x;}
+                e=e+(ptr1->coef*y);
+                ptr1=ptr1->next;
+        }
+        printf("\nThe solution is: %ld.\n",e);
+}
+
+int main(){
+        insert();
+        display();
+        eval();
+}
