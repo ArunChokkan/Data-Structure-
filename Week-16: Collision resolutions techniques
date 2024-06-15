@@ -1,0 +1,267 @@
+//Open addressing 
+#include <stdio.h>
+#include <stdlib.h>
+
+#define TABLE_SIZE 10
+
+typedef struct {
+    int key;
+    int value;
+} HashItem;
+
+HashItem* hashTable[TABLE_SIZE];
+
+int hashCode(int key) {
+    return key % TABLE_SIZE;
+}
+
+void insert(int key, int value) {
+    int hashIndex = hashCode(key);
+    while (hashTable[hashIndex] != NULL && hashTable[hashIndex]->key != -1) {
+        hashIndex = (hashIndex + 1) % TABLE_SIZE;
+    }
+    HashItem* item = (HashItem*) malloc(sizeof(HashItem));
+    item->key = key;
+    item->value = value;
+    hashTable[hashIndex] = item;
+}
+
+int search(int key) {
+    int hashIndex = hashCode(key);
+    while (hashTable[hashIndex] != NULL) {
+        if (hashTable[hashIndex]->key == key)
+            return hashTable[hashIndex]->value;
+        hashIndex = (hashIndex + 1) % TABLE_SIZE;
+    }
+    return -1;
+}
+
+void delete(int key) {
+    int hashIndex = hashCode(key);
+    while (hashTable[hashIndex] != NULL) {
+        if (hashTable[hashIndex]->key == key) {
+            hashTable[hashIndex]->key = -1;
+            return;
+        }
+        hashIndex = (hashIndex + 1) % TABLE_SIZE;
+    }
+}
+
+void display() {
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        if (hashTable[i] != NULL && hashTable[i]->key != -1)
+            printf("(%d,%d) ", hashTable[i]->key, hashTable[i]->value);
+        else
+            printf("~~ ");
+    }
+    printf("\n");
+}
+
+int main() {
+    for (int i = 0; i < TABLE_SIZE; i++)
+        hashTable[i] = NULL;
+
+    insert(1, 20);
+    insert(2, 70);
+    insert(42, 80);
+    insert(4, 25);
+    insert(12, 44);
+    insert(14, 32);
+    insert(17, 11);
+    insert(13, 78);
+    insert(37, 97);
+
+    display();
+    printf("Value for key 12: %d\n", search(12));
+    delete(12);
+    display();
+    return 0;
+}
+//Closed addressing 
+#include <stdio.h>
+#include <stdlib.h>
+
+#define TABLE_SIZE 10
+
+typedef struct HashNode {
+    int key;
+    int value;
+    struct HashNode* next;
+} HashNode;
+
+HashNode* hashTable[TABLE_SIZE];
+
+int hashCode(int key) {
+    return key % TABLE_SIZE;
+}
+
+void insert(int key, int value) {
+    int hashIndex = hashCode(key);
+    HashNode* newNode = (HashNode*) malloc(sizeof(HashNode));
+    newNode->key = key;
+    newNode->value = value;
+    newNode->next = hashTable[hashIndex];
+    hashTable[hashIndex] = newNode;
+}
+
+int search(int key) {
+    int hashIndex = hashCode(key);
+    HashNode* node = hashTable[hashIndex];
+    while (node != NULL) {
+        if (node->key == key)
+            return node->value;
+        node = node->next;
+    }
+    return -1;
+}
+
+void delete(int key) {
+    int hashIndex = hashCode(key);
+    HashNode* node = hashTable[hashIndex];
+    HashNode* prev = NULL;
+    while (node != NULL && node->key != key) {
+        prev = node;
+        node = node->next;
+    }
+    if (node == NULL) return;
+    if (prev == NULL) hashTable[hashIndex] = node->next;
+    else prev->next = node->next;
+    free(node);
+}
+
+void display() {
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        HashNode* node = hashTable[i];
+        printf("Index %d: ", i);
+        while (node != NULL) {
+            printf("(%d,%d) ", node->key, node->value);
+            node = node->next;
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    for (int i = 0; i < TABLE_SIZE; i++)
+        hashTable[i] = NULL;
+
+    insert(1, 20);
+    insert(2, 70);
+    insert(42, 80);
+    insert(4, 25);
+    insert(12, 44);
+    insert(14, 32);
+    insert(17, 11);
+    insert(13, 78);
+    insert(37, 97);
+
+    display();
+    printf("Value for key 12: %d\n", search(12));
+    delete(12);
+    display();
+    return 0;
+}
+
+//Rehashing 
+#include <stdio.h>
+#include <stdlib.h>
+
+#define TABLE_SIZE 10
+
+typedef struct {
+    int key;
+    int value;
+} HashItem;
+
+HashItem* hashTable[TABLE_SIZE];
+
+int hashCode(int key) {
+    return key % TABLE_SIZE;
+}
+
+void rehash() {
+    int oldSize = TABLE_SIZE;
+    HashItem* oldTable[TABLE_SIZE];
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        oldTable[i] = hashTable[i];
+        hashTable[i] = NULL;
+    }
+    for (int i = 0; i < oldSize; i++) {
+        if (oldTable[i] != NULL && oldTable[i]->key != -1) {
+            int hashIndex = hashCode(oldTable[i]->key);
+            while (hashTable[hashIndex] != NULL && hashTable[hashIndex]->key != -1) {
+                hashIndex = (hashIndex + 1) % TABLE_SIZE;
+            }
+            hashTable[hashIndex] = oldTable[i];
+        }
+    }
+}
+
+void insert(int key, int value) {
+    int hashIndex = hashCode(key);
+    while (hashTable[hashIndex] != NULL && hashTable[hashIndex]->key != -1) {
+        hashIndex = (hashIndex + 1) % TABLE_SIZE;
+    }
+    if (hashTable[hashIndex] == NULL || hashTable[hashIndex]->key == -1) {
+        HashItem* item = (HashItem*) malloc(sizeof(HashItem));
+        item->key = key;
+        item->value = value;
+        hashTable[hashIndex] = item;
+    } else {
+        printf("Rehashing needed!\n");
+        rehash();
+        insert(key, value);
+    }
+}
+
+int search(int key) {
+    int hashIndex = hashCode(key);
+    while (hashTable[hashIndex] != NULL) {
+        if (hashTable[hashIndex]->key == key)
+            return hashTable[hashIndex]->value;
+        hashIndex = (hashIndex + 1) % TABLE_SIZE;
+    }
+    return -1;
+}
+
+void delete(int key) {
+    int hashIndex = hashCode(key);
+    while (hashTable[hashIndex] != NULL) {
+        if (hashTable[hashIndex]->key == key) {
+            hashTable[hashIndex]->key = -1;
+            return;
+        }
+        hashIndex = (hashIndex + 1) % TABLE_SIZE;
+    }
+}
+
+void display() {
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        if (hashTable[i] != NULL && hashTable[i]->key != -1)
+            printf("(%d,%d) ", hashTable[i]->key, hashTable[i]->value);
+        else
+            printf("~~ ");
+    }
+    printf("\n");
+}
+
+int main() {
+    for (int i = 0; i < TABLE_SIZE; i++)
+        hashTable[i] = NULL;
+
+    insert(1, 20);
+    insert(2, 70);
+    insert(42, 80);
+    insert(4, 25);
+    insert(12, 44);
+    insert(14, 32);
+    insert(17, 11);
+    insert(13, 78);
+    insert(37, 97);
+
+    display();
+    printf("Value for key 12: %d\n", search(12));
+    delete(12);
+    display();
+    return 0;
+}
